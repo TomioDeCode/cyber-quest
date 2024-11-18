@@ -18,11 +18,20 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { capitalizeFirstLetter } from "@/helpers/text-uppercase";
 
+interface APIResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  error?: string;
+}
+
 interface UserData {
   id: string;
   name: string;
   role: string;
   email: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const UserProfile = ({ userId }: { userId: string }) => {
@@ -43,14 +52,18 @@ const UserProfile = ({ userId }: { userId: string }) => {
   const fetchUser = async () => {
     try {
       const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+      const result: APIResponse<UserData> = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || result.message || `Error: ${response.status}`
+        );
       }
-      const data = await response.json();
-      setUser(data);
+
+      setUser(result.data);
       setEditForm({
-        name: data.name,
-        email: data.email,
+        name: result.data.name,
+        email: result.data.email,
       });
     } catch (err) {
       setError(
@@ -72,26 +85,24 @@ const UserProfile = ({ userId }: { userId: string }) => {
         body: JSON.stringify(editForm),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update user");
+      const result: APIResponse<UserData> = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to update user");
       }
 
-      const updatedUser = await response.json();
-      setUser((prevUser) => ({
-        ...prevUser!,
-        ...updatedUser,
-      }));
-
+      setUser(result.data);
       setIsEditing(false);
       toast({
         title: "Success",
-        description: "Profile updated successfully",
+        description: result.message || "Profile updated successfully",
       });
     } catch (err) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile",
+        description:
+          err instanceof Error ? err.message : "Failed to update profile",
       });
     } finally {
       setIsSubmitting(false);
@@ -148,7 +159,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                   alt={`${user.name}'s avatar`}
                 />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-xl font-bold">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.name?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <Badge className="mt-2 capitalize" variant="secondary">
@@ -159,7 +170,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
             <div className="flex-1 space-y-4 text-center md:text-left">
               <div>
                 <h2 className="text-2xl font-bold text-primary-foreground">
-                  {user.name.toLocaleUpperCase()}
+                  {user.name?.toLocaleUpperCase()}
                 </h2>
                 <div className="mt-2 flex flex-col space-y-2">
                   <div className="flex items-center justify-center md:justify-start gap-2 text-primary-foreground">

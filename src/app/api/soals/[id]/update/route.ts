@@ -33,43 +33,45 @@ export async function PUT(
       );
     }
 
-    if (data.email && !isValidEmail(data.email)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid email format",
-          error: "Please provide a valid email address",
-        },
-        { status: 400 }
-      );
+    if (data.url) {
+      try {
+        new URL(data.url);
+      } catch (e) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid URL format",
+            error: "Please provide a valid URL",
+          },
+          { status: 400 }
+        );
+      }
     }
 
-    const existingUser = await prisma.user.findUnique({
+    const existingSoal = await prisma.soal.findUnique({
       where: { id },
     });
 
-    if (!existingUser) {
+    if (!existingSoal) {
       return NextResponse.json(
         {
           success: false,
-          message: "User not found",
-          error: "The specified user does not exist",
+          message: "Soal not found",
+          error: "The specified soal does not exist",
         },
         { status: 404 }
       );
     }
 
-    const updatedUser = await prisma.user.update({
+    const updateSoal = await prisma.soal.update({
       where: { id },
       data: {
-        name: data.name?.trim(),
-        email: data.email?.trim().toLowerCase(),
+        url: data.url?.trim(),
       },
       select: {
         id: true,
-        name: true,
-        email: true,
-        role: true,
+        soal: true,
+        url: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -78,13 +80,13 @@ export async function PUT(
     return NextResponse.json(
       {
         success: true,
-        message: "User updated successfully",
-        data: updatedUser,
+        message: "Soal updated successfully",
+        data: updateSoal,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error("Error updating soal:", error);
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
@@ -120,9 +122,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 }

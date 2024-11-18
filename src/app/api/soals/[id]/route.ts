@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
-export async function PUT(
+export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -20,71 +20,40 @@ export async function PUT(
       );
     }
 
-    const data = await request.json();
-
-    if (!data || Object.keys(data).length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No data provided",
-          error: "Update data is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (data.email && !isValidEmail(data.email)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid email format",
-          error: "Please provide a valid email address",
-        },
-        { status: 400 }
-      );
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { id },
-    });
-
-    if (!existingUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "User not found",
-          error: "The specified user does not exist",
-        },
-        { status: 404 }
-      );
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        name: data.name?.trim(),
-        email: data.email?.trim().toLowerCase(),
+    const soal = await prisma.soal.findUnique({
+      where: {
+        id: id,
       },
       select: {
         id: true,
-        name: true,
-        email: true,
-        role: true,
+        soal: true,
+        url: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
+    if (!soal) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Soal not found",
+          error: "The specified soal does not exist",
+        },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
-        message: "User updated successfully",
-        data: updatedUser,
+        message: "Soal is found successfully",
+        data: soal,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error("Error get soal:", error);
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
@@ -120,9 +89,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 }

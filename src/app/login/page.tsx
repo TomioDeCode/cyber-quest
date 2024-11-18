@@ -45,9 +45,9 @@ export default function LoginPage() {
       }
 
       const response = await fetch("/api/auth/check-role");
-      const { role } = await response.json();
+      const data = await response.json();
 
-      if (role === "admin") {
+      if (data.data.role === "admin") {
         router.push("/admin/dashboard");
       } else {
         router.push("/dashboard");
