@@ -1,5 +1,5 @@
-import { AuthGuard } from "@/components/core/auth-guard";
-import { AppSidebar } from "@/components/fragments/app-sidebar";
+import { AuthGuard } from "@/components/core/AuthGuard";
+import { AppSidebar } from "@/components/fragments/AppSidebar";
 
 export default function DashboardLayout({
   children,

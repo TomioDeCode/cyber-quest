@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/core/theme-provider";
+import { ThemeProvider } from "@/components/core/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { SessionsProvider } from "@/components/core/session-provider";
+import { SessionsProvider } from "@/components/core/SessionProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 const fontPoppins = Poppins({

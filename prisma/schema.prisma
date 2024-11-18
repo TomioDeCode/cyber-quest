@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-    id            String    @id @default(uuid())
+    id            String     @id @default(uuid())
     name          String?
-    email         String    @unique
+    email         String     @unique
     password      String
-    role          String    @default("user")
+    role          String     @default("user")
     emailVerified DateTime?
     image         String?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @updatedAt
     sessions      Session[]
+    userSoal      UserSoal[]
 }
 
 model Session {
@@ -26,4 +27,25 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Soal {
+    id        String     @id @default(uuid())
+    soal      String     @unique
+    flag      String     @unique
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    userSoal  UserSoal[]
+}
+
+model UserSoal {
+    id      String   @id @default(uuid())
+    userId  String
+    soalId  String
+    takenAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    soal Soal @relation(fields: [soalId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, soalId])
 }
