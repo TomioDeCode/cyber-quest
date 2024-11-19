@@ -52,11 +52,7 @@ export const urlNavbarAdmin = {
       items: [
         {
           title: "Profile",
-          url: "#",
-        },
-        {
-          title: "Edit Profile",
-          url: "#",
+          url: "/admin/profile",
         },
         {
           title: "Preferences",

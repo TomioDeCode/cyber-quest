@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { capitalizeFirstLetter } from "@/helpers/text-uppercase";
 
 // Improved type definitions
-type UserRole = "admin" | "user" | "moderator";
+type UserRole = "admin" | "user";
 
 interface UserData {
   id: string;
@@ -49,7 +49,7 @@ interface UserProfileProps {
 
 // Separate components for better organization
 const LoadingSkeleton: React.FC = () => (
-  <div className="flex items-center justify-center min-h-[300px] bg-gray-50 p-4">
+  <div className="flex items-center justify-center min-h-[300px] bg-bg">
     <Card className="w-full max-w-md">
       <CardContent className="pt-6">
         <div className="flex flex-col md:flex-row items-center gap-6">
@@ -138,6 +138,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, className }) => {
   const fetchUser = async () => {
     try {
       const response = await fetch(`/api/users/${userId}`);
+      console.log(response);
       const result: APIResponse<UserData> = await response.json();
 
       if (!response.ok || !result.success) {
@@ -223,7 +224,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, className }) => {
 
   return (
     <div
-      className={`flex items-center justify-center min-h-[300px] bg-gray-50 p-4 ${
+      className={`flex items-center justify-center min-h-[300px] p-4 ${
         className || ""
       }`}
     >
@@ -247,15 +248,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, className }) => {
 
             <div className="flex-1 space-y-4 text-center md:text-left">
               <div>
-                <h2 className="text-2xl font-bold text-primary-foreground">
+                <h2 className="text-2xl font-bold text-secondary-foreground">
                   {user.name.toLocaleUpperCase()}
                 </h2>
                 <div className="mt-2 flex flex-col space-y-2">
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-primary-foreground">
+                  <div className="flex items-center justify-center md:justify-start gap-2 text-secondary-foreground">
                     <Mail className="w-4 h-4 text-primary" />
                     <span className="text-sm">{user.email}</span>
                   </div>
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-primary-foreground">
+                  <div className="flex items-center justify-center md:justify-start gap-2 text-secondary-foreground">
                     <User className="w-4 h-4 text-primary" />
                     <span className="text-sm">
                       {capitalizeFirstLetter(user.role)}
