@@ -31,6 +31,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const existingEntry = await prisma.soal.findFirst({
+      where: {
+        OR: [{ soal: soal.trim() }, { url: url.trim() }, { flag: flag.trim() }],
+      },
+    });
+
+    if (existingEntry) {      
+      const duplicateFields = [];
+      if (existingEntry.soal === soal.trim()) duplicateFields.push("soal");
+      if (existingEntry.url === url.trim()) duplicateFields.push("url");
+      if (existingEntry.flag === flag.trim()) duplicateFields.push("flag");
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Duplicate entry detected",
+          error: `The following fields already exist: ${duplicateFields.join(
+            ", "
+          )}`,
+        },
+        { status: 400 }
+      );
+    }
+        
     const newSoal = await prisma.soal.create({
       data: {
         soal: soal.trim(),
@@ -64,7 +88,7 @@ export async function POST(request: NextRequest) {
           {
             success: false,
             message: "Duplicate entry",
-            error: `${target.join(", ")} already exists`,
+            error: `${target.join(", ")} already exist`,
           },
           { status: 400 }
         );
