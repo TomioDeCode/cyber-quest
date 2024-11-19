@@ -128,11 +128,11 @@ const FavoritesPage = () => {
   if (error) return <ErrorState error={error} />;
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto p-5 -mt-5">
       <Card className="bg-background shadow-none border-none">
         <CardHeader className="px-0 pb-4">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-bold text-primary uppercase">
+            <CardTitle className="text-2xl font-bold text-primary uppercase mb-5">
               Favorite Soals
             </CardTitle>
             <Button
@@ -140,7 +140,7 @@ const FavoritesPage = () => {
               size="sm"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="gap-2 text-sm"
+              className="gap-2 text-sm mb-5"
             >
               <RefreshCw
                 className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}

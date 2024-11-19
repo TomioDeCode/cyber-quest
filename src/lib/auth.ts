@@ -5,7 +5,6 @@ import { Adapter } from "next-auth/adapters";
 import { getServerSession } from "next-auth/next";
 import prisma from "./prisma";
 
-// Add proper typing for the user
 interface CustomUser {
   id: string;
   email: string;
@@ -60,7 +59,20 @@ function CustomPrismaAdapter(): Adapter {
         return null;
       }
     },
-    // ... other adapter methods remain the same
+    async createSession(data) {
+      try {
+        const session = await prisma.session.create({
+          data: {
+            ...data,
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        });
+        return session;
+      } catch (error) {
+        console.error("Create session error:", error);
+        throw error;
+      }
+    },
   };
 }
 
@@ -123,6 +135,17 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          sessionToken: crypto.randomUUID(),
+        },
+      });
     },
   },
   session: {

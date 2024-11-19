@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { capitalizeFirstLetter } from "@/helpers/text-uppercase";
 
-// Improved type definitions
 type UserRole = "admin" | "user";
 
 interface UserData {
@@ -42,51 +41,34 @@ interface EditFormData {
   email: string;
 }
 
-interface UserProfileProps {
-  userId: string;
-  className?: string;
-}
-
-// Separate components for better organization
-const LoadingSkeleton: React.FC = () => (
-  <div className="flex items-center justify-center min-h-[300px] bg-bg">
-    <Card className="w-full max-w-md">
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-24 h-24 rounded-full" />
-            <Skeleton className="h-6 w-16 mt-2" />
-          </div>
-          <div className="flex-1 space-y-4">
-            <Skeleton className="h-8 w-32" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-          </div>
+const UserProfileSkeleton = () => (
+  <Card className="w-full h-full">
+    <CardContent className="pt-6 flex items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <Skeleton className="w-24 h-24 rounded-full" />
+        <Skeleton className="h-6 w-32" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-48" />
         </div>
-      </CardContent>
-    </Card>
-  </div>
+      </div>
+    </CardContent>
+  </Card>
 );
 
-const ErrorDisplay: React.FC<{ error: string }> = ({ error }) => (
-  <div className="flex items-center justify-center min-h-[300px] bg-gray-50 p-4">
-    <Card className="w-full max-w-md bg-red-50">
-      <CardContent className="pt-6">
-        <p className="text-red-600 text-center">Error: {error}</p>
-      </CardContent>
-    </Card>
-  </div>
-);
-
-const EditProfileForm: React.FC<{
+const EditProfileForm = ({
+  formData,
+  isSubmitting,
+  onSubmit,
+  onCancel,
+  onChange,
+}: {
   formData: EditFormData;
   isSubmitting: boolean;
   onSubmit: () => Promise<void>;
   onCancel: () => void;
   onChange: (field: keyof EditFormData, value: string) => void;
-}> = ({ formData, isSubmitting, onSubmit, onCancel, onChange }) => (
+}) => (
   <div className="space-y-4 pt-4">
     <div className="space-y-2">
       <label className="text-sm font-medium">Name</label>
@@ -124,7 +106,7 @@ const EditProfileForm: React.FC<{
   </div>
 );
 
-const UserProfile: React.FC<UserProfileProps> = ({ userId, className }) => {
+const UserProfile: React.FC<{ userId: string }> = ({ userId }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +120,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, className }) => {
   const fetchUser = async () => {
     try {
       const response = await fetch(`/api/users/${userId}`);
-      console.log(response);
       const result: APIResponse<UserData> = await response.json();
 
       if (!response.ok || !result.success) {
@@ -218,82 +199,60 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, className }) => {
     }
   };
 
-  if (loading) return <LoadingSkeleton />;
-  if (error) return <ErrorDisplay error={error} />;
+  if (loading) return <UserProfileSkeleton />;
+  if (error)
+    return (
+      <Card className="w-full h-[450px] bg-red-50">
+        <CardContent className="flex items-center justify-center h-full">
+          <p className="text-red-600 text-center">{error}</p>
+        </CardContent>
+      </Card>
+    );
   if (!user) return null;
 
   return (
-    <div
-      className={`flex items-center justify-center min-h-[300px] p-4 ${
-        className || ""
-      }`}
-    >
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="flex flex-col items-center">
-              <Avatar className="w-24 h-24 border-4 border-white shadow-xl">
-                <AvatarImage
-                  src="/api/placeholder/450/450"
-                  alt={`${user.name}'s avatar`}
-                />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-xl font-bold">
-                  {user.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Badge className="mt-2 capitalize" variant="secondary">
-                {user.role.toUpperCase()}
-              </Badge>
-            </div>
-
-            <div className="flex-1 space-y-4 text-center md:text-left">
-              <div>
-                <h2 className="text-2xl font-bold text-secondary-foreground">
-                  {user.name.toLocaleUpperCase()}
-                </h2>
-                <div className="mt-2 flex flex-col space-y-2">
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-secondary-foreground">
-                    <Mail className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{user.email}</span>
-                  </div>
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-secondary-foreground">
-                    <User className="w-4 h-4 text-primary" />
-                    <span className="text-sm">
-                      {capitalizeFirstLetter(user.role)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-center md:justify-start">
-                <Dialog open={isEditing} onOpenChange={setIsEditing}>
-                  <DialogTrigger asChild>
-                    <Badge
-                      variant="outline"
-                      className="hover:bg-gray-100 cursor-pointer transition-colors"
-                    >
-                      Edit Profile
-                    </Badge>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Profile</DialogTitle>
-                    </DialogHeader>
-                    <EditProfileForm
-                      formData={editForm}
-                      isSubmitting={isSubmitting}
-                      onSubmit={handleEditSubmit}
-                      onCancel={() => setIsEditing(false)}
-                      onChange={handleFormChange}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
+    <Card className="w-full h-full flex flex-col justify-center">
+      <CardContent className="flex flex-col items-center justify-center">
+        <Avatar className="w-24 h-24 border-4 border-white shadow-xl mb-4">
+          <AvatarImage
+            src="/api/placeholder/450/450"
+            alt={`${user.name}'s avatar`}
+          />
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-xl font-bold">
+            {user.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-bold">{user.name}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <Mail className="w-4 h-4 text-primary" />
+            <span className="text-sm">{user.email}</span>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <Badge variant="secondary" className="capitalize">
+            {user.role}
+          </Badge>
+        </div>
+        <div className="mt-4">
+          <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Edit Profile</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Profile</DialogTitle>
+              </DialogHeader>
+              <EditProfileForm
+                formData={editForm}
+                isSubmitting={isSubmitting}
+                onSubmit={handleEditSubmit}
+                onCancel={() => setIsEditing(false)}
+                onChange={handleFormChange}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
