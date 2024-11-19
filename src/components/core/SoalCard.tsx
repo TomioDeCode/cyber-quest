@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ExternalLink,
   Pencil,
+  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -21,9 +22,10 @@ interface SoalCardProps {
   onUpdate: (id: string) => Promise<void>;
   onCancel: () => void;
   onEditUrlChange: (url: string) => void;
+  onToggleFavorite: (id: string, isFavorite: boolean) => void;
 }
 
-export const SoalCard: React.FC<SoalCardProps> = ({
+export const SoalCard = ({
   soal,
   editingId,
   editUrl,
@@ -32,7 +34,8 @@ export const SoalCard: React.FC<SoalCardProps> = ({
   onUpdate,
   onCancel,
   onEditUrlChange,
-}) => {
+  onToggleFavorite,
+}: SoalCardProps) => {
   const formatDate = (dateString: string): string => {
     return format(new Date(dateString), "dd MMM yyyy HH:mm");
   };
@@ -89,25 +92,41 @@ export const SoalCard: React.FC<SoalCardProps> = ({
         </div>
 
         {editingId !== soal.id && (
-          <div className="flex justify-end -mt-6 gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(soal)}
-              className="gap-2 hover:bg-secondary"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit URL
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(soal.id)}
-              className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
+          <div className="flex justify-between mt-6 gap-3">
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(soal)}
+                className="gap-2 hover:bg-secondary"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit URL
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(soal.id)}
+                className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant={soal.isFavorite ? "ghost" : "outline"}
+                size="sm"
+                onClick={() => onToggleFavorite(soal.id, soal.isFavorite)}
+                className="gap-2 hover:bg-secondary"
+              >
+                {soal.isFavorite ? (
+                  <Star className="h-4 w-4 text-yellow-500" />
+                ) : (
+                  <Star className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         )}
 

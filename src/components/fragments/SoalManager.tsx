@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,166 +10,316 @@ import { CreateSoalDialog } from "@/components/common/CreateSoalDialog";
 import { DeleteSoalDialog } from "@/components/common/DeleteSoalDialog";
 import { SoalCard } from "../core/SoalCard";
 import { Soal, UpdateMessage } from "@/types/SoalsData";
+import Cookies from "js-cookie";
 
-const SoalManager: React.FC = () => {
-  const [soals, setSoals] = useState<Soal[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+const SoalManager = () => {
+  const [soals, setSoals] = useState<Soal[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedSoals = localStorage.getItem("soals");
+      if (savedSoals) {
+        const parsedSoals = JSON.parse(savedSoals);
+        return parsedSoals.map((soal: Soal) => ({
+          ...soal,
+          isFavorite: Cookies.get(`favorite_${soal.id}`) === "true",
+        }));
+      }
+      return [];
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editUrl, setEditUrl] = useState<string>("");
+  const [editingId, setEditingId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("editingId");
+    }
+    return null;
+  });
+
+  const [editUrl, setEditUrl] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("editUrl") || "";
+    }
+    return "";
+  });
+
   const [updateMessage, setUpdateMessage] = useState<UpdateMessage>({
     type: "",
     message: "",
   });
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { toast } = useToast();
 
+  // Persist state changes
   useEffect(() => {
-    fetchSoals();
-  }, []);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("soals", JSON.stringify(soals));
+    }
+  }, [soals]);
 
-  const fetchSoals = async () => {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (editingId) {
+        localStorage.setItem("editingId", editingId);
+      } else {
+        localStorage.removeItem("editingId");
+      }
+    }
+  }, [editingId]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (editUrl) {
+        localStorage.setItem("editUrl", editUrl);
+      } else {
+        localStorage.removeItem("editUrl");
+      }
+    }
+  }, [editUrl]);
+
+  // API calls
+  const fetchSoals = useCallback(async () => {
     try {
       const response = await fetch("/api/soals");
-      const data = await response.json();
+      const data: ApiResponse<Soal[]> = await response.json();
 
-      if (data.success) {
-        setSoals(data.data);
-      } else {
-        console.log(data.message);
-        if (data.message !== "No soals found") {
-          setError(data.message);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: data.message,
-            duration: 3000,
-          });
-        }
+      if (data.success && data.data) {
+        // Apply favorite status from cookies when fetching
+        const soalsWithFavorites = data.data.map((soal) => ({
+          ...soal,
+          isFavorite: Cookies.get(`favorite_${soal.id}`) === "true",
+        }));
+        setSoals(soalsWithFavorites);
+        setError(null);
+      } else if (data.message !== "No soals found") {
+        throw new Error(data.message || "Failed to fetch soals");
       }
     } catch (err) {
-      setError("Failed to fetch soals");
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch soals";
+      setError(errorMessage);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch soals",
+        description: errorMessage,
         duration: 3000,
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const handleDelete = async (id: string): Promise<void | null> => {
-    try {
-      const response = await fetch(`/api/soals/${id}/delete`, {
-        method: "DELETE",
+  const handleToggleFavorite = useCallback(
+    async (id: string, currentStatus: boolean) => {
+      const previousSoals = [...soals];
+
+      // Optimistically update the UI and manage cookie
+      const updatedSoals = soals.map((soal) => {
+        if (soal.id === id) {
+          const newFavoriteStatus = !currentStatus;
+
+          // Set or remove cookie based on favorite status
+          if (newFavoriteStatus) {
+            Cookies.set(`favorite_${id}`, "true", { expires: 7 }); // Cookie expires in 7 days
+          } else {
+            Cookies.remove(`favorite_${id}`);
+          }
+
+          return { ...soal, isFavorite: newFavoriteStatus };
+        }
+        return soal;
       });
-      const data = await response.json();
 
-      if (data.success) {
-        setSoals(soals.filter((soal) => soal.id !== id));
-        setDeleteError(null);
-        toast({
-          title: "Success",
-          description: "Soal deleted successfully",
-          duration: 3000,
+      setSoals(updatedSoals);
+
+      try {
+        const response = await fetch(`/api/soals/${id}/favorite`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isFavorite: !currentStatus,
+          }),
         });
-      } else {
-        setDeleteError(data.error || "Failed to delete soal");
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || "Failed to update favorite status"
+          );
+        }
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          const newSoals = soals.map((soal) => {
+            if (soal.id === id) {
+              const newFavoriteStatus = data.data.isFavorite;
+
+              // Update cookie based on API response
+              if (newFavoriteStatus) {
+                Cookies.set(`favorite_${id}`, "true", { expires: 7 });
+              } else {
+                Cookies.remove(`favorite_${id}`);
+              }
+
+              return { ...soal, isFavorite: newFavoriteStatus };
+            }
+            return soal;
+          });
+          setSoals(newSoals);
+        }
+      } catch (error) {
+        // Revert the optimistic update and cookie on error
+        setSoals(previousSoals);
+        if (!currentStatus) {
+          Cookies.remove(`favorite_${id}`);
+        } else {
+          Cookies.set(`favorite_${id}`, "true", { expires: 7 });
+        }
+
+        console.error("Error updating favorite status:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: data.error || "Failed to delete soal",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to update favorite status",
           duration: 3000,
         });
       }
-    } catch (err) {
-      setDeleteError("An error occurred while deleting the soal");
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An error occurred while deleting the soal",
-        duration: 3000,
-      });
-    } finally {
-      setDeleteDialogOpen(false);
-      setDeletingId(null);
-    }
-  };
+    },
+    [soals, toast]
+  );
 
-  const handleEdit = (soal: Soal) => {
+  const handleDelete = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        const response = await fetch(`/api/soals/${id}/delete`, {
+          method: "DELETE",
+        });
+        const data: ApiResponse<void> = await response.json();
+
+        if (data.success) {
+          // Remove favorite cookie when deleting a soal
+          Cookies.remove(`favorite_${id}`);
+          setSoals((prev) => prev.filter((soal) => soal.id !== id));
+          setDeleteError(null);
+          toast({
+            title: "Success",
+            description: "Soal deleted successfully",
+            duration: 3000,
+          });
+        } else {
+          throw new Error(data.error || "Failed to delete soal");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "An error occurred while deleting the soal";
+        setDeleteError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorMessage,
+          duration: 3000,
+        });
+      } finally {
+        setDeleteDialogOpen(false);
+        setDeletingId(null);
+      }
+    },
+    [toast]
+  );
+
+  const handleUpdate = useCallback(
+    async (id: string) => {
+      try {
+        const response = await fetch(`/api/soals/${id}/update`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: editUrl }),
+        });
+
+        const data: ApiResponse<void> = await response.json();
+
+        if (data.success) {
+          const updatedSoals = soals.map((soal) =>
+            soal.id === id ? { ...soal, url: editUrl } : soal
+          );
+          setSoals(updatedSoals);
+
+          setUpdateMessage({
+            type: "success",
+            message: "URL updated successfully",
+          });
+          toast({
+            title: "Success",
+            description: "URL updated successfully",
+            duration: 3000,
+          });
+
+          setTimeout(() => {
+            setEditingId(null);
+            setEditUrl("");
+            setUpdateMessage({ type: "", message: "" });
+          }, 2000);
+        } else {
+          throw new Error(data.message || "Failed to update URL");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update URL";
+        setUpdateMessage({ type: "error", message: errorMessage });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorMessage,
+          duration: 3000,
+        });
+      }
+    },
+    [editUrl, soals, toast]
+  );
+
+  // Event handlers
+  const handleEdit = useCallback((soal: Soal) => {
     setEditingId(soal.id);
     setEditUrl(soal.url || "");
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setEditingId(null);
     setEditUrl("");
     setUpdateMessage({ type: "", message: "" });
-  };
+  }, []);
 
-  const handleUpdate = async (id: string) => {
-    try {
-      const response = await fetch(`/api/soals/${id}/update`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: editUrl }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setUpdateMessage({
-          type: "success",
-          message: "URL updated successfully",
-        });
-        setSoals(
-          soals.map((soal) =>
-            soal.id === id ? { ...soal, url: editUrl } : soal
-          )
-        );
-        toast({
-          title: "Success",
-          description: "URL updated successfully",
-          duration: 3000,
-        });
-        setTimeout(() => {
-          setEditingId(null);
-          setUpdateMessage({ type: "", message: "" });
-        }, 2000);
-      } else {
-        setUpdateMessage({ type: "error", message: data.message });
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: data.message || "Failed to update URL",
-          duration: 3000,
-        });
-      }
-    } catch (err) {
-      setUpdateMessage({ type: "error", message: "Failed to update URL" });
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update URL",
-        duration: 3000,
-      });
-    }
-  };
-
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchSoals();
     setRefreshing(false);
-  };
+  }, [fetchSoals]);
 
+  // Initial data fetch
+  useEffect(() => {
+    fetchSoals();
+  }, [fetchSoals]);
+
+  // Render loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[300px]">
@@ -181,6 +331,7 @@ const SoalManager: React.FC = () => {
     );
   }
 
+  // Render error state
   if (error) {
     return (
       <Alert variant="destructive" className="max-w-4xl mx-auto mt-8 shadow-sm">
@@ -194,7 +345,7 @@ const SoalManager: React.FC = () => {
     <div className="w-full max-w-6xl mx-auto px-4">
       <Card className="bg-background shadow-none border-none">
         <CardHeader className="px-0 flex flex-row items-center justify-between space-y-0 pb-8">
-          <CardTitle className="text-3xl font-bold tracking-tight">
+          <CardTitle className="text-3xl font-bold tracking-tight uppercase">
             Soal Management
           </CardTitle>
           <div className="flex gap-4">
@@ -237,6 +388,7 @@ const SoalManager: React.FC = () => {
                   onUpdate={handleUpdate}
                   onCancel={handleCancel}
                   onEditUrlChange={setEditUrl}
+                  onToggleFavorite={handleToggleFavorite}
                 />
               ))}
             </div>

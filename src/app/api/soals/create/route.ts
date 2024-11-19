@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-        
+
     const newSoal = await prisma.soal.create({
       data: {
         soal: soal.trim(),

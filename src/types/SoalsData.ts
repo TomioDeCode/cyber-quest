@@ -3,6 +3,7 @@ export interface Soal {
   soal: string;
   url: string | null;
   flag: string;
+  isFavorite: boolean
   createdAt: string;
   updatedAt: string;
 }

@@ -27,7 +27,9 @@ CREATE TABLE "Session" (
 CREATE TABLE "Soal" (
     "id" TEXT NOT NULL,
     "soal" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
     "flag" TEXT NOT NULL,
+    "isFavorite" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -52,6 +54,9 @@ CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Soal_soal_key" ON "Soal"("soal");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Soal_url_key" ON "Soal"("url");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Soal_flag_key" ON "Soal"("flag");

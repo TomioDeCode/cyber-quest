@@ -30,13 +30,14 @@ model Session {
 }
 
 model Soal {
-    id        String     @id @default(uuid())
-    soal      String     @unique
-    url       String     @unique
-    flag      String     @unique
-    createdAt DateTime   @default(now())
-    updatedAt DateTime   @updatedAt
-    userSoal  UserSoal[]
+    id         String     @id @default(uuid())
+    soal       String     @unique
+    url        String     @unique
+    flag       String     @unique
+    isFavorite Boolean    @default(false)
+    createdAt  DateTime   @default(now())
+    updatedAt  DateTime   @updatedAt
+    userSoal   UserSoal[]
 }
 
 model UserSoal {
