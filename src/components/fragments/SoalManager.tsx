@@ -62,7 +62,6 @@ const SoalManager = () => {
 
   const { toast } = useToast();
 
-  // Persist state changes
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("soals", JSON.stringify(soals));
@@ -89,14 +88,12 @@ const SoalManager = () => {
     }
   }, [editUrl]);
 
-  // API calls
   const fetchSoals = useCallback(async () => {
     try {
       const response = await fetch("/api/soals");
       const data: ApiResponse<Soal[]> = await response.json();
 
       if (data.success && data.data) {
-        // Apply favorite status from cookies when fetching
         const soalsWithFavorites = data.data.map((soal) => ({
           ...soal,
           isFavorite: Cookies.get(`favorite_${soal.id}`) === "true",
@@ -125,14 +122,12 @@ const SoalManager = () => {
     async (id: string, currentStatus: boolean) => {
       const previousSoals = [...soals];
 
-      // Optimistically update the UI and manage cookie
       const updatedSoals = soals.map((soal) => {
         if (soal.id === id) {
           const newFavoriteStatus = !currentStatus;
 
-          // Set or remove cookie based on favorite status
           if (newFavoriteStatus) {
-            Cookies.set(`favorite_${id}`, "true", { expires: 7 }); // Cookie expires in 7 days
+            Cookies.set(`favorite_${id}`, "true", { expires: 7 });
           } else {
             Cookies.remove(`favorite_${id}`);
           }
@@ -145,7 +140,7 @@ const SoalManager = () => {
       setSoals(updatedSoals);
 
       try {
-        const response = await fetch(`/api/soals/${id}/favorite`, {
+        const response = await fetch(`/api/soals/${id}/favorite/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -168,7 +163,6 @@ const SoalManager = () => {
             if (soal.id === id) {
               const newFavoriteStatus = data.data.isFavorite;
 
-              // Update cookie based on API response
               if (newFavoriteStatus) {
                 Cookies.set(`favorite_${id}`, "true", { expires: 7 });
               } else {
@@ -182,7 +176,6 @@ const SoalManager = () => {
           setSoals(newSoals);
         }
       } catch (error) {
-        // Revert the optimistic update and cookie on error
         setSoals(previousSoals);
         if (!currentStatus) {
           Cookies.remove(`favorite_${id}`);
@@ -214,7 +207,6 @@ const SoalManager = () => {
         const data: ApiResponse<void> = await response.json();
 
         if (data.success) {
-          // Remove favorite cookie when deleting a soal
           Cookies.remove(`favorite_${id}`);
           setSoals((prev) => prev.filter((soal) => soal.id !== id));
           setDeleteError(null);
@@ -296,7 +288,6 @@ const SoalManager = () => {
     [editUrl, soals, toast]
   );
 
-  // Event handlers
   const handleEdit = useCallback((soal: Soal) => {
     setEditingId(soal.id);
     setEditUrl(soal.url || "");
@@ -314,12 +305,10 @@ const SoalManager = () => {
     setRefreshing(false);
   }, [fetchSoals]);
 
-  // Initial data fetch
   useEffect(() => {
     fetchSoals();
   }, [fetchSoals]);
 
-  // Render loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[300px]">
@@ -331,7 +320,6 @@ const SoalManager = () => {
     );
   }
 
-  // Render error state
   if (error) {
     return (
       <Alert variant="destructive" className="max-w-4xl mx-auto mt-8 shadow-sm">

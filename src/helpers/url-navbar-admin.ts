@@ -37,15 +37,11 @@ export const urlNavbarAdmin = {
       items: [
         {
           title: "All Questions",
-          url: "#",
-        },
-        {
-          title: "Create Question",
-          url: "#",
+          url: "/admin/soals",
         },
         {
           title: "Favorite Questions",
-          url: "#",
+          url: "/admin/soals/favorite",
         },
       ],
     },

@@ -1,4 +1,3 @@
-// app/api/soals/favorite/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
@@ -9,7 +8,6 @@ export async function POST(
   const { id } = params;
 
   try {
-    // Validate UUID format
     if (
       !id ||
       !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
@@ -35,7 +33,7 @@ export async function POST(
       where: { id },
       data: {
         isFavorite: body.isFavorite,
-        updatedAt: new Date(), // Update the timestamp
+        updatedAt: new Date(),
       },
       select: {
         id: true,
@@ -49,7 +47,7 @@ export async function POST(
         success: true,
         data: {
           ...updatedSoal,
-          isFavorite: Boolean(updatedSoal.isFavorite), // Ensure boolean type
+          isFavorite: Boolean(updatedSoal.isFavorite),
         },
         message: "Favorite status updated successfully",
       },
