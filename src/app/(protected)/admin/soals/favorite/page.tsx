@@ -31,7 +31,7 @@ interface ErrorStateProps {
 }
 
 const FavoriteCard = ({ soal }: FavoriteCardProps) => (
-  <Card className="bg-card border border-border shadow-sm rounded-md">
+  <Card className="bg-card dark:bg-secondary border border-border shadow-sm rounded-md">
     <CardContent className="p-4 md:p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">

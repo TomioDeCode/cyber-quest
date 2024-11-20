@@ -1,4 +1,9 @@
-import { BookOpen, Bot, Command, SquareTerminal } from "lucide-react";
+import {
+  LayoutDashboard,
+  MessageCircleQuestion,
+  ShieldX,
+  User,
+} from "lucide-react";
 
 export const urlNavbarAdmin = {
   user: {
@@ -9,15 +14,14 @@ export const urlNavbarAdmin = {
   teams: [
     {
       name: "BootCamp Cyber",
-      logo: Command,
-      plan: "Free",
+      logo: ShieldX,
     },
   ],
   navMain: [
     {
       title: "Dashboard",
       url: "#",
-      icon: SquareTerminal,
+      icon: LayoutDashboard,
       isActive: true,
       items: [
         {
@@ -33,7 +37,7 @@ export const urlNavbarAdmin = {
     {
       title: "Questions",
       url: "#",
-      icon: Bot,
+      icon: MessageCircleQuestion,
       items: [
         {
           title: "All Questions",
@@ -48,7 +52,7 @@ export const urlNavbarAdmin = {
     {
       title: "Account Settings",
       url: "#",
-      icon: BookOpen,
+      icon: User,
       items: [
         {
           title: "Profile",
@@ -56,7 +60,7 @@ export const urlNavbarAdmin = {
         },
         {
           title: "Preferences",
-          url: "#",
+          url: "/admin/preferences",
         },
       ],
     },

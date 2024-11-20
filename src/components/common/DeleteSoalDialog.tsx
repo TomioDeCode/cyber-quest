@@ -27,7 +27,7 @@ export const DeleteSoalDialog: React.FC<DeleteSoalDialogProps> = ({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-[400px] p-6">
         <AlertDialogHeader className="space-y-3">
-          <AlertDialogTitle className="text-xl font-bold text-primary-foreground">
+          <AlertDialogTitle className="text-xl font-bold text-primary dark:text-foreground">
             Are you sure?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-600">

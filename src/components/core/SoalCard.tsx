@@ -56,7 +56,7 @@ export const SoalCard = ({
   };
 
   return (
-    <Card className="bg-background/50 hover:bg-background/80 transition-colors duration-200">
+    <Card className="bg-background/50 hover:bg-background/80 transition-colors duration-200 dark:bg-secondary">
       <div className="p-8">
         <div className="flex justify-between items-start gap-8">
           <div className="space-y-6 flex-1">
@@ -73,7 +73,7 @@ export const SoalCard = ({
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-sm leading-relaxed">
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-sm leading-relaxed border dark:border-black">
                 {soal.soal}
               </p>
             </div>
@@ -95,19 +95,19 @@ export const SoalCard = ({
           <div className="flex justify-between mt-6 gap-3">
             <div className="flex gap-3">
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => onEdit(soal)}
-                className="gap-2 hover:bg-secondary"
+                className="gap-2 hover:bg-primary"
               >
                 <Pencil className="h-4 w-4" />
                 Edit URL
               </Button>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => onDelete(soal.id)}
-                className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="gap-2 text-foreground hover:text-foreground hover:bg-destructive"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete

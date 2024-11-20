@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={false}>
       <body className={`${fontPoppins.variable} antialiased`}>
         <SidebarProvider>
           <SessionsProvider>
